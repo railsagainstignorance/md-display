@@ -1,0 +1,29 @@
+{
+  "name": "md-display",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Browser-only Markdown viewer and Marp slide presenter with live updates.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.17",
+    "markdown-it": "^15.0.3",
+    "mermaid": "^12.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.7",
+    "vitest": "^3.2.7"
+  }
+}

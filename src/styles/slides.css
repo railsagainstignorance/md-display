@@ -1,0 +1,603 @@
+/* Marp slides. Sizes inside a slide are relative to its frame's width (the
+   deck's own CSS sets the font size in cqw), so a slide, its full-screen
+   view and its thumbnail are the same picture at different sizes. The
+   thumbnail strip lives inside #mdd-rendered so these rules reach it. */
+
+:root {
+  --slides-surround: #eaeef2;
+  --thumb-w: 200px;
+  --toc-w: 22%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --slides-surround: #010409;
+  }
+}
+
+body.slides-mode #mdd-content {
+  background: var(--slides-surround);
+}
+
+body.slides-mode #mdd-content-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.slide-wrapper {
+  margin: 0 0 32px;
+  scroll-margin-top: 16px;
+}
+
+.slide-frame {
+  container-type: inline-size;
+  width: 100%;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Slides stay light in dark mode: the page's colour tokens are set afresh on
+   each slide, and `invert` slides get dark ones. */
+#mdd-rendered section.slide {
+  --bg: #ffffff;
+  --text: #24292f;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --surface: #f6f8fa;
+  --hover: #eaeef2;
+  --link: #0969da;
+  --active-bg: #ddf4ff;
+  color-scheme: light;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  /* `safe`: content too tall to fit aligns to the top instead, so only the
+     bottom is cut off. Plain `center` spilled it off both ends, title too. */
+  justify-content: safe center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 2.5em 2.7em;
+  padding-left: calc(var(--toc-shift, 0px) + 2.7em);
+  background-color: var(--bg);
+  background-position: center;
+  background-size: cover;
+  color: var(--text);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+#mdd-rendered section.slide.invert {
+  --bg: #202228;
+  --text: #f0f0f0;
+  --muted: #9198a1;
+  --border: #444c56;
+  --surface: #2d333b;
+  --hover: #2d333b;
+  --link: #79c0ff;
+  --active-bg: rgba(56, 139, 253, 0.2);
+  color-scheme: dark;
+}
+
+/* Never shrink content to fit: a code block (it scrolls sideways) would
+   otherwise squash itself and cut its own lines off, unflagged, instead of
+   the slide overflowing and being flagged as too full. */
+#mdd-rendered section.slide > * {
+  flex-shrink: 0;
+}
+
+/* …except a drawn diagram, which shrinks into the space left, keeping its
+   shape: the whole diagram stays visible, just smaller. */
+#mdd-rendered section.slide > pre.mermaid[data-processed] {
+  display: flex;
+  flex-shrink: 1;
+  justify-content: center;
+  min-height: 0;
+}
+
+#mdd-rendered section.slide > pre.mermaid[data-processed] svg {
+  max-height: 100%;
+}
+
+#mdd-rendered section.slide > :first-child {
+  margin-top: 0;
+}
+
+#mdd-rendered section.slide h1 {
+  border-bottom: none;
+  font-size: 1.7em;
+}
+
+#mdd-rendered section.slide h2 {
+  border-bottom: none;
+  font-size: 1.35em;
+}
+
+#mdd-rendered section.slide pre code,
+#mdd-rendered section.slide table {
+  font-size: 0.75em;
+}
+
+/* The document's fixed px spacing, in em on slides so it grows with the
+   slide as the text does. Values match the px look at the ~1000px slide
+   width of the normal view. */
+#mdd-rendered section.slide pre {
+  padding: 0.7em;
+  border-radius: 0.26em;
+}
+
+#mdd-rendered section.slide code {
+  border-radius: 0.21em;
+}
+
+#mdd-rendered section.slide th,
+#mdd-rendered section.slide td {
+  padding: 0.35em 0.76em;
+}
+
+#mdd-rendered section.slide blockquote {
+  border-left-width: 0.18em;
+}
+
+#mdd-rendered section.slide.lead {
+  text-align: center;
+}
+
+#mdd-rendered section.slide > .slide-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#mdd-rendered section.slide > .slide-bg-left {
+  right: auto;
+  left: var(--toc-shift, 0px);
+}
+
+#mdd-rendered section.slide > .slide-bg-right {
+  left: auto;
+}
+
+#mdd-rendered section.slide .columns,
+#mdd-rendered section.slide .columns-3 {
+  display: grid;
+  align-items: start;
+  gap: 1.5em;
+}
+
+#mdd-rendered section.slide .columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#mdd-rendered section.slide .columns-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#mdd-rendered section.slide .columns > div > :first-child,
+#mdd-rendered section.slide .columns-3 > div > :first-child {
+  margin-top: 0;
+}
+
+#mdd-rendered section.slide > header,
+#mdd-rendered section.slide > footer {
+  position: absolute;
+  right: 2.7em;
+  left: calc(var(--toc-shift, 0px) + 2.7em);
+  color: inherit;
+  font-size: 0.55em;
+  text-align: left;
+  opacity: 0.7;
+}
+
+#mdd-rendered section.slide > header {
+  top: 1.2em;
+}
+
+#mdd-rendered section.slide > footer {
+  bottom: 1.2em;
+}
+
+#mdd-rendered section.slide > .slide-number {
+  position: absolute;
+  right: 1.5em;
+  bottom: 1.2em;
+  font-size: 0.55em;
+  opacity: 0.7;
+}
+
+/* Palette: text colours, and bg-* backgrounds (on a span, or a whole slide
+   as its class). Swap the colours here; the class names stay. */
+#mdd-rendered .primary { color: #0969da; }
+#mdd-rendered .accent { color: #bf3989; }
+#mdd-rendered .success { color: #1a7f37; }
+#mdd-rendered .warning { color: #9a6700; }
+#mdd-rendered .danger { color: #cf222e; }
+#mdd-rendered .muted { color: #57606a; }
+#mdd-rendered .bg-primary, #mdd-rendered section.slide.bg-primary { background-color: #0969da; color: #fff; }
+#mdd-rendered .bg-accent, #mdd-rendered section.slide.bg-accent { background-color: #bf3989; color: #fff; }
+#mdd-rendered .bg-success, #mdd-rendered section.slide.bg-success { background-color: #1a7f37; color: #fff; }
+#mdd-rendered .bg-warning, #mdd-rendered section.slide.bg-warning { background-color: #9a6700; color: #fff; }
+#mdd-rendered .bg-danger, #mdd-rendered section.slide.bg-danger { background-color: #cf222e; color: #fff; }
+#mdd-rendered .bg-muted, #mdd-rendered section.slide.bg-muted { background-color: #57606a; color: #fff; }
+
+#mdd-rendered span[class^="bg-"] {
+  padding: 0 0.25em;
+  border-radius: 0.2em;
+}
+
+/* bg-* sets white text, so code's usual near-white box would be unreadable. */
+#mdd-rendered section.slide[class*="bg-"] code,
+#mdd-rendered span[class^="bg-"] code {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+}
+
+/* Speaker notes under each slide (n) */
+.slide-notes {
+  display: none;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: 1px solid #d4a72c;
+  border-radius: 6px;
+  background: #fff8c5;
+  color: #24292f;
+  font-size: 14px;
+}
+
+body.show-notes .slide-notes {
+  display: block;
+}
+
+.slide-notes-label {
+  color: #7d4e00;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#mdd-rendered .slide-notes code {
+  border-color: #d4a72c;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.slide-notes-empty {
+  color: #57606a;
+  font-style: italic;
+}
+
+/* Too much content for a slide: an editing aid, so never shown presenting or printed. */
+.slide-wrapper.overflowing::before {
+  content: "⚠️ Too much content for one slide: the rest is cut off";
+  display: block;
+  margin-bottom: 4px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#mdd-nav-links a.overflowing::after {
+  content: " ⚠️";
+}
+
+#mdd-toolbar .keep {
+  white-space: nowrap;
+}
+
+/* Presenting: one slide at a time, filling the screen. Slides that aren't
+   showing are hidden with visibility, not display, so Mermaid can still
+   measure the diagrams on them. */
+body.presenting {
+  background: #000;
+}
+
+body.presenting #mdd-nav,
+body.presenting #mdd-raw-source,
+body.presenting .slide-notes,
+body.presenting .slide-wrapper.overflowing::before {
+  display: none;
+}
+
+body.presenting #mdd-content {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  padding: 0;
+  background: #000;
+}
+
+body.presenting #mdd-content-inner {
+  max-width: none;
+}
+
+body.presenting #mdd-rendered {
+  display: block;
+}
+
+body.presenting .slide-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  visibility: hidden;
+}
+
+body.presenting .slide-wrapper.current {
+  visibility: visible;
+}
+
+body.presenting .slide-frame {
+  flex: none;
+  box-shadow: none;
+}
+
+/* Thumbnail strip (t): copies of each slide's frame, laid out at the slide's
+   full size and then shrunk as a whole, so each is an exact miniature. */
+#mdd-thumb-strip {
+  display: none;
+}
+
+body.presenting.show-thumbs #mdd-thumb-strip {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: var(--thumb-w);
+  overflow-y: auto;
+  padding: 12px 12px 12px 4px;
+  background: #16181d;
+}
+
+body.presenting.show-thumbs .slide-wrapper {
+  left: var(--thumb-w);
+}
+
+/* A <button>'s own font and centred text would pass to the slide copy. */
+#mdd-thumb-strip .thumb {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+#mdd-thumb-strip .thumb:hover {
+  opacity: 0.85;
+}
+
+#mdd-thumb-strip .thumb.current {
+  opacity: 1;
+}
+
+#mdd-thumb-strip .thumb-num {
+  flex: none;
+  width: 1.8em;
+  color: #9198a1;
+  font-size: 11px;
+  text-align: right;
+}
+
+#mdd-thumb-strip .thumb.current .thumb-num {
+  color: #fff;
+  font-weight: 700;
+}
+
+#mdd-thumb-strip .thumb.overflowing .thumb-num {
+  color: #ff7b72;
+}
+
+#mdd-thumb-strip .thumb.overflowing .thumb-num::after {
+  content: "⚠️";
+  display: block;
+  font-size: 10px;
+}
+
+#mdd-thumb-strip .thumb-view {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#mdd-thumb-strip .thumb.current .thumb-view {
+  outline: 3px solid #f0b400;
+  outline-offset: 2px;
+}
+
+body.presenting #mdd-thumb-strip .slide-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-shadow: none;
+  transform: scale(var(--thumb-scale, 0.13));
+  transform-origin: 0 0;
+}
+
+/* Notes and timer overlays while presenting (n, c). Part of the presented
+   page, so the audience sees them too. Corners are set per deck. */
+.present-overlay {
+  position: fixed;
+  z-index: 2;
+  display: none;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18); /* edge stays visible on black */
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  color: #f0f0f0;
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body.presenting.show-present-notes #mdd-present-notes,
+body.presenting.show-present-timer #mdd-present-timer {
+  display: block;
+}
+
+#mdd-present-notes {
+  max-width: min(40vw, 560px);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+#mdd-present-notes > * {
+  margin: 0.5em 0;
+}
+
+#mdd-present-notes ul,
+#mdd-present-notes ol {
+  padding-left: 1.5em;
+}
+
+#mdd-present-notes > :first-child {
+  margin-top: 0;
+}
+
+#mdd-present-notes > :last-child {
+  margin-bottom: 0;
+}
+
+#mdd-present-notes .slide-notes-empty {
+  color: #a0a0a0;
+}
+
+#mdd-present-timer {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Contents column while presenting (i): inside the live slide, on the left,
+   with the slide's left edges (content, header, footer, a left split
+   background) moved right by its width. Styled like the nav, in em so it
+   scales with the slide. */
+body.presenting.show-toc #mdd-rendered .slide-wrapper.current section.slide {
+  --toc-shift: var(--toc-w);
+}
+
+#mdd-rendered section.slide > .slide-toc {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: none;
+  width: var(--toc-w);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.5em;
+  text-align: left;
+}
+
+body.presenting.show-toc #mdd-rendered .slide-wrapper.current section.slide > .slide-toc {
+  display: block;
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list {
+  position: relative; /* rows' offsetTop is measured from here */
+  height: 100%;
+  overflow: hidden;
+  padding: 0.6em 0;
+}
+
+#mdd-rendered section.slide > .slide-toc.cropped-top .slide-toc-list {
+  mask-image: linear-gradient(transparent, #000 2em);
+}
+
+#mdd-rendered section.slide > .slide-toc.cropped-bottom .slide-toc-list {
+  mask-image: linear-gradient(#000 calc(100% - 2em), transparent);
+}
+
+#mdd-rendered section.slide > .slide-toc.cropped-top.cropped-bottom .slide-toc-list {
+  mask-image: linear-gradient(transparent, #000 2em, #000 calc(100% - 2em), transparent);
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a {
+  display: block;
+  overflow: hidden;
+  padding: 0.23em 1.23em;
+  border-left: 0.15em solid transparent;
+  color: var(--text);
+  line-height: 1.5;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a:hover {
+  background: var(--hover);
+  color: var(--link);
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a.active {
+  border-left-color: var(--link);
+  background: var(--active-bg);
+  color: var(--link);
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a.h1 {
+  margin-top: 0.46em;
+  font-weight: 600;
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a.h2 {
+  padding-left: 1.85em;
+}
+
+#mdd-rendered section.slide > .slide-toc .slide-toc-list a.h3 {
+  padding-left: 2.77em;
+  color: var(--muted);
+  font-size: 0.92em;
+}
+
+@media print {
+  body.slides-mode #mdd-content {
+    padding: 0;
+    background: none;
+  }
+
+  body.slides-mode #mdd-content-inner {
+    max-width: none;
+  }
+
+  body.slides-mode .slide-wrapper {
+    margin: 0;
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  body.slides-mode .slide-wrapper:last-of-type {
+    break-after: auto;
+  }
+
+  body.slides-mode .slide-frame {
+    box-shadow: none;
+  }
+
+  body.slides-mode .slide-wrapper.overflowing::before {
+    display: none;
+  }
+
+  body.slides-mode:not(.show-notes) .slide-frame {
+    width: 100vw;
+    height: 100vh;
+    aspect-ratio: auto;
+  }
+}

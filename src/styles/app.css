@@ -1,0 +1,458 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --text: #24292f;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --surface: #f6f8fa;
+  --hover: #eaeef2;
+  --link: #0969da;
+  --active-bg: #ddf4ff;
+  --danger: #cf222e;
+  --button-bg: #ffffff;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --text: #e6edf3;
+    --muted: #8d96a0;
+    --border: #30363d;
+    --surface: #151b23;
+    --hover: #21262d;
+    --link: #4493f8;
+    --active-bg: rgba(56, 139, 253, 0.15);
+    --danger: #f85149;
+    --button-bg: #21262d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* Nav: doc dropdown, toolbar, then the doc's headings. */
+#mdd-nav {
+  width: 270px;
+  min-width: 270px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px 0 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+#mdd-nav-title {
+  padding: 0 16px 12px;
+}
+
+#mdd-doc-select {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+#mdd-doc-select:hover {
+  color: var(--link);
+}
+
+#mdd-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-heading {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.toolbar-heading ~ .toolbar-heading {
+  margin-top: 10px;
+}
+
+#mdd-toolbar button {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+#mdd-toolbar button:hover {
+  background: var(--hover);
+  color: var(--link);
+}
+
+#mdd-toolbar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#mdd-toolbar button:disabled:hover {
+  background: var(--button-bg);
+  color: var(--text);
+}
+
+#mdd-nav-links a {
+  display: block;
+  overflow: hidden;
+  padding: 3px 16px;
+  border-left: 2px solid transparent;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mdd-nav-links a:hover {
+  background: var(--hover);
+  color: var(--link);
+}
+
+#mdd-nav-links a.active {
+  border-left-color: var(--link);
+  background: var(--active-bg);
+  color: var(--link);
+}
+
+#mdd-nav-links a.h1 {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+#mdd-nav-links a.h2 {
+  padding-left: 24px;
+}
+
+#mdd-nav-links a.h3 {
+  padding-left: 36px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Document */
+#mdd-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 40px 56px 80px;
+}
+
+#mdd-content-inner {
+  max-width: 860px;
+}
+
+#mdd-rendered h1,
+#mdd-rendered h2,
+#mdd-rendered h3,
+#mdd-rendered h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.25;
+  scroll-margin-top: 16px;
+}
+
+#mdd-rendered h1 {
+  margin-top: 0;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.9em;
+}
+
+#mdd-rendered h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.4em;
+}
+
+#mdd-rendered h3 {
+  font-size: 1.15em;
+}
+
+#mdd-rendered h4 {
+  font-size: 1em;
+}
+
+#mdd-rendered p {
+  margin: 0.75em 0;
+  line-height: 1.65;
+}
+
+#mdd-rendered ul,
+#mdd-rendered ol {
+  margin: 0.75em 0;
+  padding-left: 2em;
+}
+
+#mdd-rendered li {
+  margin: 0.3em 0;
+  line-height: 1.65;
+}
+
+#mdd-rendered li > ul,
+#mdd-rendered li > ol {
+  margin: 0.2em 0;
+}
+
+#mdd-rendered strong {
+  font-weight: 600;
+}
+
+#mdd-rendered code {
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 85%;
+}
+
+#mdd-rendered pre {
+  margin: 1em 0;
+  padding: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+#mdd-rendered pre code {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+}
+
+#mdd-rendered pre.mermaid[data-processed] {
+  border: none;
+  background: none;
+  text-align: center;
+}
+
+.mermaid-load-error {
+  margin: -0.5em 0 1em;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+#mdd-rendered table {
+  width: 100%;
+  margin: 1em 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+#mdd-rendered th,
+#mdd-rendered td {
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+#mdd-rendered th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+#mdd-rendered thead th {
+  text-align: center;
+}
+
+#mdd-rendered th[scope="row"] {
+  text-align: right;
+}
+
+#mdd-rendered th.table-corner {
+  border: none;
+  background: none;
+}
+
+#mdd-rendered blockquote {
+  margin: 1em 0;
+  padding: 0 1em;
+  border-left: 4px solid var(--border);
+  color: var(--muted);
+}
+
+#mdd-rendered a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+#mdd-rendered a:hover {
+  text-decoration: underline;
+}
+
+#mdd-rendered hr {
+  margin: 2em 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+#mdd-rendered img {
+  max-width: 100%;
+}
+
+#mdd-rendered kbd {
+  padding: 0.1em 0.4em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 85%;
+}
+
+/* Raw Markdown view (r) */
+#mdd-raw-source {
+  display: none;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+body.show-raw #mdd-raw-source {
+  display: block;
+}
+
+body.show-raw #mdd-rendered {
+  display: none;
+}
+
+/* Narrow screens: nav stacked above the doc, the whole page scrolling. */
+@media (max-width: 760px) {
+  body {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  #mdd-nav {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    padding: 16px 0 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #mdd-nav-links {
+    max-height: 35vh;
+    overflow-y: auto;
+  }
+
+  #mdd-content {
+    overflow: visible;
+    padding: 24px 16px 64px;
+  }
+}
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --text: #24292f;
+    --muted: #57606a;
+    --border: #d0d7de;
+    --surface: #f6f8fa;
+    --link: #0969da;
+  }
+
+  #mdd-nav,
+  .mermaidTooltip {
+    display: none;
+  }
+
+  body {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  #mdd-content {
+    overflow: visible;
+    padding: 0 24px;
+  }
+}
+
+/* Opening files */
+#mdd-status {
+  margin: -4px 16px 12px;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+#mdd-rendered a.mdd-unavailable {
+  color: var(--muted);
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+#mdd-rendered img.mdd-missing {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+body.mdd-dragging::after {
+  content: "Drop a Markdown file or folder to open it";
+  position: fixed;
+  inset: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed var(--link);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  color: var(--link);
+  font-size: 20px;
+  font-weight: 600;
+  pointer-events: none;
+}

@@ -1,0 +1,9 @@
+# Local only, not tracked
+tmp/
+PLAN.md
+
+node_modules/
+dist/
+test-results/
+playwright-report/
+.DS_Store

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="View Markdown files and Marp slide decks in your browser, with live updates as you edit." />
+    <meta name="theme-color" content="#0969da" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>md-display</title>
+  </head>
+  <body>
+    <nav id="mdd-nav" aria-label="Document">
+      <div id="mdd-nav-title"><select id="mdd-doc-select" aria-label="Document"></select></div>
+      <div id="mdd-toolbar"></div>
+      <p id="mdd-status" role="status" hidden></p>
+      <div id="mdd-nav-links"></div>
+    </nav>
+    <main id="mdd-content">
+      <div id="mdd-content-inner">
+        <div id="mdd-rendered"></div>
+        <pre id="mdd-raw-source"></pre>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
