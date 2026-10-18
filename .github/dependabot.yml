@@ -1,0 +1,15 @@
+version: 2
+
+# Keeps the workflows' pinned action SHAs (and their version comments) up to
+# date: one pull request a week for all of them, and only for releases at least
+# a week old, so a bad or compromised release has time to be noticed first.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ['*']
