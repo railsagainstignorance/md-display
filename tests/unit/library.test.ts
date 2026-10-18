@@ -24,6 +24,7 @@ beforeAll(() => {
     writeFileSync(join(dir, path), text);
   }
   symlinkSync(join(dir, "outside.txt"), join(dir, "notes/link.txt"));
+  symlinkSync(join(dir, "notes/.env"), join(dir, "notes/env-link.txt"));
 });
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
@@ -61,7 +62,22 @@ describe("resolve", () => {
     expect(await library.resolve("img.png")).toBe(join(library.root, "img.png"));
   });
 
-  it.each(["../outside.txt", "sub/../a.md", "/etc/passwd", ".env", ".hidden/c.md", "", "sub/", "missing.md", "sub"])(
+  it.each([
+    "../outside.txt",
+    "sub/../a.md",
+    "/etc/passwd",
+    ".env",
+    ".hidden/c.md",
+    "",
+    "sub/",
+    "missing.md",
+    "sub",
+    // Windows separators and drives: x\..\.env would be <root>\.env there.
+    "x\\..\\.env",
+    "sub\\.env",
+    "C:/Windows/win.ini",
+    "a.md\0.png",
+  ])(
     "refuses %j",
     async (path) => {
       const library = await openLibrary([join(dir, "notes")]);
@@ -72,5 +88,10 @@ describe("resolve", () => {
   it("refuses a link leading out of the root", async () => {
     const library = await openLibrary([join(dir, "notes")]);
     expect(await library.resolve("link.txt")).toBeNull();
+  });
+
+  it("refuses a link to a hidden file inside the root", async () => {
+    const library = await openLibrary([join(dir, "notes")]);
+    expect(await library.resolve("env-link.txt")).toBeNull();
   });
 });

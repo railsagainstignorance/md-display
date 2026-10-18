@@ -67,12 +67,16 @@ export async function openLibrary(args: string[]): Promise<Library> {
     },
 
     async resolve(path) {
+      // Only '/' separates: a backslash (a separator on Windows) or a drive
+      // colon could otherwise slip a hidden name past the check on each part.
+      if (/[\\:\0]/.test(path)) return null;
       const parts = path.split("/");
-      if (parts.some((part) => !part || part === "." || part === ".." || part.startsWith("."))) return null;
+      if (parts.some(isHiddenOrRelative)) return null;
       try {
-        // The real path, so a link inside the folder can't lead out of it.
+        // The real path, so a link inside the folder can't lead out of it, or to a hidden file in it.
         const real = await realpath(resolve(root, ...parts));
-        if (!real.startsWith(root.endsWith(sep) ? root : root + sep) || !(await stat(real)).isFile()) return null;
+        if (!real.startsWith(root.endsWith(sep) ? root : root + sep)) return null;
+        if (relative(root, real).split(sep).some(isHiddenOrRelative) || !(await stat(real)).isFile()) return null;
         return real;
       } catch {
         return null;
@@ -109,6 +113,11 @@ export async function openLibrary(args: string[]): Promise<Library> {
       };
     },
   };
+}
+
+/** A path part that's hidden (`.env`, `.git`), empty, or `.`/`..`. */
+function isHiddenOrRelative(part: string): boolean {
+  return !part || part.startsWith(".");
 }
 
 function commonFolder(folders: string[]): string {
