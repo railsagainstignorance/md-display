@@ -102,6 +102,9 @@ export async function openLibrary(args: string[]): Promise<Library> {
         const watcher = watchFs(folder, { recursive: entry.isDir }, (_, name) => {
           if (!name) return;
           const path = resolve(folder, name.toString());
+          // Changes the page could never ask for (`.env`, `.git/…`) aren't reported, not even by name.
+          const parts = relative(root, path).split(sep);
+          if (parts.some(isHiddenOrRelative)) return;
           if (entry.isDir || path === entry.path) changed(path);
         });
         watcher.on("error", () => {}); // A watched folder removed: nothing more to report.

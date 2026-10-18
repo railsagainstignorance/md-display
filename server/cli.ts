@@ -8,7 +8,7 @@ import { parseArgs } from "node:util";
 import { createApp } from "./app.ts";
 import { LibraryError, openLibrary } from "./library.ts";
 import { DEFAULT_PORT, isPortFree, PortError, resolvePort, type PortMode } from "./ports.ts";
-import { removeNote, runningServers, serverOn, stop, writeNote } from "./registry.ts";
+import { notedServerOn, removeNote, runningServers, stop, writeNote } from "./registry.ts";
 
 // `md-display [files or folders…]`: serves the page and the given Markdown
 // from this machine, and opens it in the browser.
@@ -97,7 +97,7 @@ async function main(): Promise<void> {
   try {
     port = await resolvePort(requested, mode, {
       isPortFree: (p) => isPortFree(p, host),
-      serverOn,
+      serverOn: notedServerOn,
       runningServers,
       stop,
       step: () => 1 + Math.floor(Math.random() * 3),

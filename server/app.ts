@@ -7,7 +7,9 @@ import type { Library } from "./library.ts";
 // The local server's requests: the built page (dist/), and under /api/ the
 // library's docs, their files and a stream of changes. Requests must name
 // this machine as the host (unless serving to the network), so a web page
-// can't reach the API by pointing its own domain at 127.0.0.1.
+// can't reach the API by pointing its own domain at 127.0.0.1. And the API
+// only answers the page itself: another site can't load a doc's files into
+// its own page with an <img> or <script>, even just to see if they exist.
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -72,6 +74,12 @@ export function createApp({ library, pageDir, demo, anyHost }: AppOptions): Hand
     const hostname = (req.headers.host ?? "").replace(/:\d+$/, "");
     if (!anyHost && !LOOPBACK_HOSTS.has(hostname)) return send(res, 403, "This server only answers to localhost.");
     if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "Method not allowed");
+    if (url.pathname.startsWith("/api/")) {
+      // Browsers say where a request came from: "none" is the address typed in.
+      const site = req.headers["sec-fetch-site"];
+      if (site && site !== "same-origin" && site !== "none") return send(res, 403, "Only md-display's own page can ask for this.");
+      res.setHeader("cross-origin-resource-policy", "same-origin");
+    }
 
     switch (url.pathname) {
       case "/api/server":

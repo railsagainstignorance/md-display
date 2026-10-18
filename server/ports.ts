@@ -3,7 +3,8 @@ import { createServer } from "node:net";
 // Choosing the port when the one asked for is taken: `--next` (the default)
 // moves up to a free one nearby, `--replace` stops the md-display holding it,
 // `--wipe` stops every md-display first. Only ever stops md-display servers:
-// one is recognised by asking it, over HTTP, who it is.
+// one is recognised by asking it, over HTTP, who it is, and finding the note
+// it left when it started (see registry.ts).
 
 export const DEFAULT_PORT = 8765;
 export const MAX_NEXT_PORT_ATTEMPTS = 50;
@@ -15,7 +16,7 @@ export class PortError extends Error {}
 /** What choosing a port needs from the system; tests pass fakes. */
 export interface PortSystem {
   isPortFree(port: number): Promise<boolean>;
-  /** The pid of the md-display serving on `port`; null if it's something else or nothing. */
+  /** The pid of the md-display serving on `port`, as its note confirms; null if it's something else or nothing. */
   serverOn(port: number): Promise<number | null>;
   /** Every other md-display running. */
   runningServers(): Promise<number[]>;

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { LibraryError, openLibrary } from "../../server/library.ts";
 
 let dir: string;
@@ -93,5 +93,23 @@ describe("resolve", () => {
   it("refuses a link to a hidden file inside the root", async () => {
     const library = await openLibrary([join(dir, "notes")]);
     expect(await library.resolve("env-link.txt")).toBeNull();
+  });
+});
+
+describe("watch", () => {
+  it("reports changed files, but not hidden ones, not even by name", async () => {
+    const library = await openLibrary([join(dir, "notes")]);
+    const changed: string[] = [];
+    const stop = library.watch((path) => changed.push(path));
+    try {
+      writeFileSync(join(dir, "notes/.env"), "SECRET=2");
+      writeFileSync(join(dir, "notes/.hidden/c.md"), "# C, edited");
+      writeFileSync(join(dir, "notes/a.md"), "# A, edited");
+      await vi.waitFor(() => expect(changed).toContain("a.md"), { timeout: 2000 });
+      await new Promise((r) => setTimeout(r, 200)); // Any late events for the hidden files.
+      expect(changed.filter((path) => path.split("/").some((part) => part.startsWith(".")))).toEqual([]);
+    } finally {
+      stop();
+    }
   });
 });

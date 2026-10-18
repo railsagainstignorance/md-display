@@ -59,7 +59,7 @@ export function serverOn(port: number): Promise<number | null> {
         res.on("end", () => {
           try {
             const info = JSON.parse(body) as { app?: string; pid?: number };
-            resolve(info.app === "md-display" && Number.isInteger(info.pid) ? info.pid! : null);
+            resolve(info.app === "md-display" && isPid(info.pid) ? info.pid : null);
           } catch {
             resolve(null);
           }
@@ -70,6 +70,16 @@ export function serverOn(port: number): Promise<number | null> {
     req.on("error", () => resolve(null));
     req.end();
   });
+}
+
+/**
+ * The pid of the md-display on `port`, only if its own note says it's there:
+ * anything can listen on a port and claim any pid, so the answer alone isn't
+ * trusted with stopping a process.
+ */
+export async function notedServerOn(port: number): Promise<number | null> {
+  const pid = await serverOn(port);
+  return pid !== null && pid !== process.pid && readNotes().some((note) => note.pid === pid && note.port === port) ? pid : null;
 }
 
 /** Every md-display running besides this one, confirmed by asking each; stale notes are cleared. */
@@ -86,6 +96,11 @@ export async function runningServers(): Promise<number[]> {
   return found;
 }
 
+/** A single other process: 0 and negative pids signal whole groups, and 1 is init. */
+function isPid(pid: unknown): pid is number {
+  return Number.isInteger(pid) && (pid as number) > 1;
+}
+
 export function isAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -97,6 +112,7 @@ export function isAlive(pid: number): boolean {
 
 /** Asks each process to stop, then forces any still running after a few seconds. */
 export async function stop(pids: number[]): Promise<void> {
+  pids = pids.filter((pid) => isPid(pid) && pid !== process.pid);
   for (const pid of pids) signal(pid, "SIGTERM");
   let left = await waitForExit(pids, STOP_WAIT_MS);
   for (const pid of left) signal(pid, "SIGKILL");
