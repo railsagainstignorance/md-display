@@ -31,6 +31,18 @@ const TYPES: Record<string, string> = {
   ".webm": "video/webm",
   ".woff2": "font/woff2",
 };
+/**
+ * Types a browser shows without running anything in them. A doc's files can
+ * come from anyone (a cloned repo, say), so anything else (HTML, SVG, scripts)
+ * is only ever a download if opened directly: md-display reads SVGs through
+ * fetch and shows them in an <img>, where their scripts don't run.
+ */
+const PASSIVE_TYPES = new Set([".md", ".markdown", ".txt", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".ico", ".mp4", ".webm"]);
+/**
+ * And whatever is opened gets no powers: a sandboxed page has no origin of its
+ * own, so it can't read the API or the service worker's cache as md-display.
+ */
+const FILE_CSP = "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'";
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const KEEPALIVE_MS = 25_000;
 
@@ -71,7 +83,7 @@ export function createApp({ library, pageDir, demo, anyHost }: AppOptions): Hand
         );
       case "/api/file":
         return library.resolve(url.searchParams.get("path") ?? "").then((file) =>
-          file ? sendFile(req, res, file) : send(res, 404, "Not found"),
+          file ? sendDocFile(req, res, file) : send(res, 404, "Not found"),
         );
       case "/api/events":
         res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store" });
@@ -108,6 +120,13 @@ async function servePage(req: IncomingMessage, res: ServerResponse, pageDir: str
   }
   // The service worker checks for a new version of itself; the rest is cached by it.
   sendFile(req, res, file, file.endsWith(`${sep}sw.js`) || file.endsWith(".html") ? "no-cache" : undefined);
+}
+
+/** A file from the library: sandboxed, and a download unless it's a passive type. */
+function sendDocFile(req: IncomingMessage, res: ServerResponse, file: string) {
+  res.setHeader("content-security-policy", FILE_CSP);
+  if (!PASSIVE_TYPES.has(extname(file).toLowerCase())) res.setHeader("content-disposition", "attachment");
+  sendFile(req, res, file);
 }
 
 function sendFile(req: IncomingMessage, res: ServerResponse, file: string, cacheControl = "no-store") {

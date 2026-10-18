@@ -12,7 +12,9 @@ export interface LinkTargets {
 /**
  * Before the rendered doc is shown: relative links to other open docs switch
  * to them inside md-display; other relative links (files that aren't open)
- * become inert, since they'd lead nowhere on this site; relative image paths
+ * become inert, since they'd lead nowhere on this site, as do links into
+ * md-display's own address (its local server's files, say: a doc can't send
+ * the reader to a file of its choosing on this site); relative image paths
  * are parked in `data-mdd-src` until loadImages() fills them in. Slide
  * backgrounds (`data-mdd-bg`, and the `backgroundImage` directive in
  * `data-mdd-bg-image`) are shown straight away when external, else loaded too.
@@ -35,8 +37,16 @@ export function rewriteLinks(root: ParentNode, targets: LinkTargets): void {
     }
   }
   for (const a of root.querySelectorAll<HTMLAnchorElement>("a[href]")) {
-    const target = resolveRelative(targets.docPath, a.getAttribute("href")!);
-    if (!target) continue;
+    const href = a.getAttribute("href")!;
+    const target = resolveRelative(targets.docPath, href);
+    if (!target) {
+      if (intoThisSite(href)) {
+        a.removeAttribute("href");
+        a.classList.add("mdd-unavailable");
+        a.title = "Links into md-display's own address are turned off";
+      }
+      continue;
+    }
     const id = targets.docIdFor(target.path);
     if (id) {
       a.href = `?${new URLSearchParams({ doc: id })}${target.fragment ? `#${target.fragment}` : ""}`;
@@ -47,6 +57,16 @@ export function rewriteLinks(root: ParentNode, targets: LinkTargets): void {
       a.classList.add("mdd-unavailable");
       a.title = `${target.path} isn't open in md-display`;
     }
+  }
+}
+
+/** Whether `href` (not an in-page anchor) leads somewhere under the page's own address. */
+function intoThisSite(href: string): boolean {
+  if (href.startsWith("#")) return false;
+  try {
+    return new URL(href, location.href).href.startsWith(new URL("./", location.href).href);
+  } catch {
+    return false;
   }
 }
 

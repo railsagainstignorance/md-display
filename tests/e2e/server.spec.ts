@@ -81,6 +81,31 @@ test("updates live when a file changes, with no Reload button", async ({ page })
   await expect(page.getByRole("button", { name: "🔄 Reload" })).toBeHidden();
 });
 
+test("a doc can't send the reader to a file that would run as md-display", async ({ page, request }) => {
+  const evil = "<script>fetch('/api/docs')</script>";
+  writeFileSync(join(dir, "notes/evil.html"), evil);
+  writeFileSync(join(dir, "notes/evil.svg"), `<svg xmlns="http://www.w3.org/2000/svg">${evil}</svg>`);
+  const base = await serve(join(dir, "notes"));
+  const absolute = new URL("/api/file?path=evil.svg", base).href;
+  writeFileSync(
+    join(dir, "notes/a.md"),
+    `# Doc A\n\n[site-absolute](/api/file?path=evil.html) · [absolute](${absolute}) · [web](https://example.com)\n`,
+  );
+  await page.goto(base);
+
+  // Links into md-display's own address are turned off; others are left alone.
+  await expect(page.getByText("site-absolute", { exact: true })).not.toHaveAttribute("href");
+  await expect(page.getByText("absolute", { exact: true })).not.toHaveAttribute("href");
+  await expect(page.getByText("web", { exact: true })).toHaveAttribute("href", "https://example.com");
+
+  // Opened directly, a file is sandboxed, and anything that could run is a download.
+  for (const [path, download] of [["evil.html", true], ["evil.svg", true], ["img/dot.svg", true], ["a.md", false]] as const) {
+    const res = await request.get(new URL(`/api/file?path=${path}`, base).href);
+    expect(res.headers()["content-security-policy"]).toMatch(/^sandbox;/);
+    expect(res.headers()["content-disposition"]).toBe(download ? "attachment" : undefined);
+  }
+});
+
 test("started on one file, opens it; --no-demo leaves the demo out", async ({ page }) => {
   const url = await serve("--no-demo", join(dir, "notes/sub/b.md"));
   expect(url).toMatch(/\?doc=local%2Fb\.md$/);
