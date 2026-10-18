@@ -3,6 +3,7 @@ import "./styles/app.css";
 import "./styles/slides.css";
 import { listDocRefs, type DocRef } from "./docs";
 import { renderDocument } from "./render/document";
+import type { NavItem } from "./render/headings";
 import { parseFrontMatter } from "./render/frontmatter";
 import { renderMarp } from "./render/marp/render";
 import { isMarp } from "./render/marp/slides";
@@ -92,12 +93,35 @@ function errorMessage(e: unknown): string {
 
 function setRawShown(shown: boolean): void {
   const wasShown = document.body.classList.contains("show-raw");
+  // Keep the reader's place: the same heading or slide in the other view.
+  const position = nav.position;
   document.body.classList.toggle("show-raw", shown);
   toolbar.setRawShown(shown);
   storeFlag("local", RAW_STORAGE_KEY, shown);
+  if (shown !== wasShown) nav.reveal(position);
   if (shown || !wasShown) return;
   slides.contentChanged();
   draw();
+}
+
+/** The source as-is, with an empty marker at each nav entry's line for the nav to scroll to. */
+function fillRawSource(items: NavItem[]): void {
+  const lineStarts = [0];
+  for (let i = text.indexOf("\n"); i !== -1; i = text.indexOf("\n", i + 1)) lineStarts.push(i + 1);
+  const anchored = items.filter((item) => item.line !== undefined).sort((a, b) => a.line! - b.line!);
+  const parts: Node[] = [];
+  let from = 0;
+  for (const { id, line } of anchored) {
+    const at = lineStarts[Math.min(line!, lineStarts.length - 1)];
+    parts.push(document.createTextNode(text.slice(from, at)));
+    const anchor = document.createElement("span");
+    anchor.className = "raw-anchor";
+    anchor.dataset.id = id;
+    parts.push(anchor);
+    from = at;
+  }
+  parts.push(document.createTextNode(text.slice(from)));
+  rawSource.replaceChildren(...parts);
 }
 
 /** Draws the doc's Mermaid diagrams; on slides, then re-checks what fits. */
@@ -161,10 +185,10 @@ function show(doc: DocRef, keepScroll: boolean): void {
     content.scrollTop = keepScroll ? scroll.content : 0;
     window.scrollTo(0, keepScroll ? scroll.window : 0);
   };
-  const { meta, body } = parseFrontMatter(text);
+  const { meta, body, bodyLine } = parseFrontMatter(text);
   isDeck = isMarp(meta);
   asSlides = isDeck && storedValue("session", viewKey(doc)) !== "document";
-  const deck = asSlides ? renderMarp(meta, body) : null;
+  const deck = asSlides ? renderMarp(meta, body, bodyLine) : null;
   const plain = deck ? null : renderDocument(text);
   const { html, hasMermaid } = deck ?? plain!;
   if (!deck) slides.detach();
@@ -177,7 +201,7 @@ function show(doc: DocRef, keepScroll: boolean): void {
   const targets = linkTargets(doc);
   rewriteLinks(fragment, targets);
   rendered.replaceChildren(fragment);
-  rawSource.textContent = text;
+  fillRawSource(deck?.nav ?? plain!.headings);
   document.title = `${(isDeck && meta.title) || doc.name} · md-display`;
   restoreScroll();
   if (deck) {

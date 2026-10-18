@@ -11,12 +11,15 @@ export interface FrontMatter {
   body: string;
   /** The front matter's own lines, without its `---` fences; null when there is none. */
   block: string | null;
+  /** The line (from 0) the body starts on in the whole text. */
+  bodyLine: number;
 }
 
 export function parseFrontMatter(text: string): FrontMatter {
   const m = FRONT_MATTER_RE.exec(text);
-  if (!m) return { meta: {}, body: text, block: null };
-  return { meta: parseFlatYaml(m[1]), body: text.slice(m[0].length), block: m[1] };
+  if (!m) return { meta: {}, body: text, block: null, bodyLine: 0 };
+  const bodyLine = m[0].split("\n").length - 1;
+  return { meta: parseFlatYaml(m[1]), body: text.slice(m[0].length), block: m[1], bodyLine };
 }
 
 /**

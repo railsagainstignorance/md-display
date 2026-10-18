@@ -82,6 +82,7 @@ function background(bg: SlideBackground, slideStyles: string[]): string {
 
 interface RenderedSlide {
   html: string;
+  line: number;
   /** Level and text of its first heading, if it has one. */
   heading?: { level: number; text: string };
   hasMermaid: boolean;
@@ -112,7 +113,7 @@ function renderSlide(slide: Slide, number: number, width: number, idCounts: Map<
     `<div class="slide-wrapper" id="slide-${number}">\n<div class="slide-frame">\n` +
     `<section${sectionAttrs}>\n${parts.join("\n")}\n</section>\n</div>\n` +
     `<aside class="slide-notes"><div class="slide-notes-label">Speaker notes</div>\n${notes}\n</aside>\n</div>`;
-  return { html, heading: env.firstHeading, hasMermaid: env.hasMermaid ?? false };
+  return { html, line: slide.line, heading: env.firstHeading, hasMermaid: env.hasMermaid ?? false };
 }
 
 /**
@@ -126,8 +127,11 @@ export function slideNavLevels(levels: (number | undefined)[]): (NavItem["level"
   return levels.map((lv) => (Math.min(present.indexOf(lv ?? present.at(-1)!), 2) + 1) as NavItem["level"]);
 }
 
-/** A Marp deck: its slides, nav entries and the CSS its size and front matter call for. */
-export function renderMarp(meta: Record<string, string>, body: string): RenderedDeck {
+/**
+ * A Marp deck: its slides, nav entries and the CSS its size and front matter
+ * call for. `bodyLine` is the line the body starts on in the whole file.
+ */
+export function renderMarp(meta: Record<string, string>, body: string, bodyLine = 0): RenderedDeck {
   const size = meta.size?.trim() ?? "16:9";
   const [width, height] = Object.hasOwn(SLIDE_SIZES, size) ? SLIDE_SIZES[size] : SLIDE_SIZES["16:9"];
   const idCounts = new Map<string, number>();
@@ -137,6 +141,7 @@ export function renderMarp(meta: Record<string, string>, body: string): Rendered
     id: `slide-${i + 1}`,
     text: `${i + 1}. ${s.heading?.text || `Slide ${i + 1}`}`,
     level: levels[i],
+    line: s.line + bodyLine,
   }));
   return {
     html: slides.map((s) => s.html).join("\n"),

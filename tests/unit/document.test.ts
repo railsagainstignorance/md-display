@@ -19,9 +19,9 @@ describe("renderDocument headings", () => {
     expect(doc.html).toContain('<h2 id="two-code">Two <code>code</code></h2>');
     expect(doc.html).toContain("<h4>Four</h4>");
     expect(doc.headings).toEqual([
-      { level: 1, id: "one", text: "One" },
-      { level: 2, id: "two-code", text: "Two code" },
-      { level: 3, id: "three", text: "Three" },
+      { level: 1, id: "one", text: "One", line: 0 },
+      { level: 2, id: "two-code", text: "Two code", line: 2 },
+      { level: 3, id: "three", text: "Three", line: 4 },
     ]);
   });
 
@@ -41,6 +41,10 @@ describe("renderDocument front matter", () => {
     expect(html).toContain('<pre class="front-matter"><code class="language-yaml">marp: true\ntitle: &lt;x&gt;\n</code></pre>');
     expect(html).not.toContain("<h2>");
     expect(html).toContain('<h1 id="hi">Hi</h1>');
+  });
+
+  it("counts heading lines from the top of the file", () => {
+    expect(renderDocument("---\ntitle: x\n---\n\n# Hi\n").headings[0].line).toBe(4);
   });
 
   it("adds nothing when there is no front matter", () => {

@@ -4,6 +4,8 @@ export interface Heading {
   level: 1 | 2 | 3;
   id: string;
   text: string;
+  /** The line (from 0) it's on in the rendered Markdown. */
+  line: number;
 }
 
 /** An entry in the nav: a heading, or a slide (indented only when the deck's headings vary in level). */
@@ -11,6 +13,8 @@ export interface NavItem {
   level?: 1 | 2 | 3;
   id: string;
   text: string;
+  /** The line (from 0) its heading or slide starts on in the doc's source, for the raw view. */
+  line?: number;
 }
 
 export function slugify(text: string): string {
@@ -59,7 +63,7 @@ export function headingIds(md: MarkdownIt): void {
       seen.set(base, count + 1);
       const id = count ? `${base}-${count}` : base;
       token.attrSet("id", id);
-      headings.push({ level: level as Heading["level"], id, text });
+      headings.push({ level: level as Heading["level"], id, text, line: token.map?.[0] ?? 0 });
     });
     state.env.headings = headings;
     state.env.firstHeading = first;

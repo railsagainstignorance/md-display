@@ -42,8 +42,8 @@ Multi-line note.
 `;
 
 function deck(text: string) {
-  const { meta, body } = parseFrontMatter(text);
-  return renderMarp(meta, body);
+  const { meta, body, bodyLine } = parseFrontMatter(text);
+  return renderMarp(meta, body, bodyLine);
 }
 
 const slides = (body: string) => deck(`---\nmarp: true\n---\n${body}`);
@@ -240,14 +240,19 @@ describe("renderMarp", () => {
 
   it("lists slides in the nav by first heading, indented by level", () => {
     expect(rendered.nav).toEqual([
-      { id: "slide-1", text: "1. First slide", level: 1 },
-      { id: "slide-2", text: "2. Second slide", level: 2 },
-      { id: "slide-3", text: "3. Third slide", level: 3 },
+      { id: "slide-1", text: "1. First slide", level: 1, line: 6 },
+      { id: "slide-2", text: "2. Second slide", level: 2, line: 13 },
+      { id: "slide-3", text: "3. Third slide", level: 3, line: 30 },
     ]);
   });
 
+  it("gives each slide's line in the file: its --- separator, or the body's start", () => {
+    const deck = renderMarp({}, "# One\n\n---\n\n```\n---\n```\n\n---\n# Three", 3);
+    expect(deck.nav.map((item) => item.line)).toEqual([3, 5, 11]);
+  });
+
   it("names a slide with no heading by its number", () => {
-    expect(slides("Just text\n").nav).toEqual([{ id: "slide-1", text: "1. Slide 1", level: undefined }]);
+    expect(slides("Just text\n").nav).toEqual([{ id: "slide-1", text: "1. Slide 1", level: undefined, line: 3 }]);
   });
 
   it("gives headings ids unique across the deck", () => {

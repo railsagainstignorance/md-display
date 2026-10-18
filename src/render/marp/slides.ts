@@ -40,6 +40,8 @@ export const GLOBAL_DIRECTIVES = new Set([
 ]);
 
 export interface Slide {
+  /** The line (from 0) it starts on in the body: its `---` separator, or 0 for the first. */
+  line: number;
   markdown: string;
   notes: string;
   directives: Record<string, string>;
@@ -51,17 +53,22 @@ export function isMarp(meta: Record<string, string>): boolean {
 
 /** Per-slide Markdown, split on `---` lines that aren't inside a fenced code block. */
 export function splitSlides(body: string): string[] {
-  const slides: string[][] = [[]];
+  return slideParts(body).map((part) => part.markdown);
+}
+
+/** Each slide's Markdown and the line it starts on: its `---` separator, or 0 for the first. */
+function slideParts(body: string): { line: number; markdown: string }[] {
+  const slides: { line: number; lines: string[] }[] = [{ line: 0, lines: [] }];
   let fenced = false;
-  for (const line of body.split("\n")) {
+  body.split("\n").forEach((line, i) => {
     if (FENCE_RE.test(line)) fenced = !fenced;
     if (!fenced && SLIDE_SEPARATOR_RE.test(line)) {
-      slides.push([]);
-      continue;
+      slides.push({ line: i, lines: [] });
+      return;
     }
-    slides.at(-1)!.push(line);
-  }
-  return slides.map((lines) => trimBlankLines(lines.join("\n")));
+    slides.at(-1)!.lines.push(line);
+  });
+  return slides.map(({ line, lines }) => ({ line, markdown: trimBlankLines(lines.join("\n")) }));
 }
 
 /**
@@ -91,7 +98,7 @@ export function buildSlides(meta: Record<string, string>, body: string): Slide[]
   const persistent: Record<string, string> = {};
   for (const [key, value] of Object.entries(meta)) if (LOCAL_DIRECTIVES.has(key)) persistent[key] = value;
 
-  return splitSlides(body).map((raw) => {
+  return slideParts(body).map(({ line, markdown: raw }) => {
     const spot: Record<string, string> = {};
     const notes: string[] = [];
     const kept = subOutsideCode(
@@ -113,7 +120,7 @@ export function buildSlides(meta: Record<string, string>, body: string): Slide[]
       },
       raw,
     );
-    return { markdown: trimBlankLines(kept), notes: notes.join("\n\n"), directives: { ...persistent, ...spot } };
+    return { line, markdown: trimBlankLines(kept), notes: notes.join("\n\n"), directives: { ...persistent, ...spot } };
   });
 }
 

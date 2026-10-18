@@ -15,7 +15,11 @@ describe("parseFrontMatter", () => {
   });
 
   it("returns the text unchanged when there is no front matter", () => {
-    expect(parseFrontMatter("# Hi\n---\nx")).toEqual({ meta: {}, body: "# Hi\n---\nx", block: null });
+    expect(parseFrontMatter("# Hi\n---\nx")).toEqual({ meta: {}, body: "# Hi\n---\nx", block: null, bodyLine: 0 });
+  });
+
+  it("gives the line the body starts on", () => {
+    expect(parseFrontMatter("---\nmarp: true\ntitle: x\n---\n# Hi").bodyLine).toBe(4);
   });
 
   it("only counts front matter at the very start", () => {

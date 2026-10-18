@@ -65,6 +65,25 @@ test.describe("slides view", () => {
     await expect(page.locator('#mdd-nav-links a[data-id="slide-3"]')).toHaveClass(/active/);
   });
 
+  test("the raw view opens at the slide being read, and back", async ({ page }) => {
+    // Slides long enough in the source that each fills the raw view.
+    const filler = Array.from({ length: 60 }, (_, i) => `<!-- note line ${i} -->`).join("\n");
+    await openDeck(page, DECK.replaceAll("\n---\n", `\n${filler}\n\n---\n`));
+    const top = (selector: string) =>
+      page.locator(selector).evaluate((el) => Math.abs(el.getBoundingClientRect().top));
+
+    await page.locator('#mdd-nav-links a[data-id="slide-4"]').click();
+    await expect.poll(() => top("#user-content-slide-4")).toBeLessThan(40);
+    await page.keyboard.press("r");
+    await expect.poll(() => top('#mdd-raw-source .raw-anchor[data-id="slide-4"]')).toBeLessThan(40);
+    await expect(page.locator('#mdd-nav-links a[data-id="slide-4"]')).toHaveClass(/active/);
+
+    await page.locator('#mdd-nav-links a[data-id="slide-2"]').click();
+    await expect.poll(() => top('#mdd-raw-source .raw-anchor[data-id="slide-2"]')).toBeLessThan(40);
+    await page.keyboard.press("r");
+    await expect.poll(() => top("#user-content-slide-2")).toBeLessThan(40);
+  });
+
   test("s switches a deck to its document view and back, remembered for the doc", async ({ page }) => {
     await openDeck(page, DECK);
     await expect(page.getByRole("button", { name: "▶️ Present (f)" })).toBeVisible();

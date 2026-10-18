@@ -359,6 +359,11 @@ body.show-raw #mdd-raw-source {
   display: block;
 }
 
+/* Where the nav lands a heading or slide in the raw view, as in the rendered one. */
+#mdd-raw-source .raw-anchor {
+  scroll-margin-top: 16px;
+}
+
 body.show-raw #mdd-rendered {
   display: none;
 }

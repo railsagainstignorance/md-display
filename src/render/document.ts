@@ -14,10 +14,11 @@ export interface RenderedDocument {
  * line above into a heading.
  */
 export function renderDocument(text: string): RenderedDocument {
-  const { body, block } = parseFrontMatter(text);
+  const { body, block, bodyLine } = parseFrontMatter(text);
   const env: RenderEnv = {};
   const frontMatter =
     block === null ? "" : `<pre class="front-matter"><code class="language-yaml">${escapeHtml(block)}\n</code></pre>\n`;
   const html = frontMatter + renderMarkdown(body, {}, env);
-  return { html, headings: env.headings ?? [], hasMermaid: env.hasMermaid ?? false };
+  const headings = (env.headings ?? []).map((h) => ({ ...h, line: h.line + bodyLine }));
+  return { html, headings, hasMermaid: env.hasMermaid ?? false };
 }

@@ -35,6 +35,17 @@ test("r toggles the raw Markdown and is remembered across reloads", async ({ pag
   await expect(page.locator("#mdd-rendered")).toBeVisible();
 });
 
+test("the raw view opens at the heading being read", async ({ page }) => {
+  const top = (selector: string) =>
+    page.locator(selector).evaluate((el) => Math.abs(el.getBoundingClientRect().top));
+  await page.locator('#mdd-nav-links a[data-id="tables"]').click();
+  await expect.poll(() => top("#user-content-tables")).toBeLessThan(40);
+  await page.keyboard.press("r");
+  await expect.poll(() => top('#mdd-raw-source .raw-anchor[data-id="tables"]')).toBeLessThan(40);
+  await page.keyboard.press("r");
+  await expect(page.locator("#user-content-tables")).toBeInViewport();
+});
+
 test("draws Mermaid diagrams", async ({ page }) => {
   await expect(page.locator("#mdd-rendered pre.mermaid svg").first()).toBeVisible({ timeout: 15_000 });
 });
