@@ -37,9 +37,41 @@ Shortcuts: <kbd>r</kbd> raw Markdown, <kbd>s</kbd> slides or document,
 thumbnails, <kbd>n</kbd> notes, <kbd>c</kbd> timer, <kbd>i</kbd> contents,
 <kbd>Esc</kbd> to stop), <kbd>l</kbd> reload (Firefox and Safari).
 
+## Running it locally
+
+md-display can also run from your own machine, serving files by path: no
+picking or permission prompts, live updates in every browser, and links that
+open any doc under the folder. It needs Node 22.18 or later and a copy of
+this repo:
+
+```bash
+git clone https://github.com/railsagainstignorance/md-display.git
+cd md-display
+npm install && npm run build
+npm link             # puts the md-display command on your PATH
+md-display ~/notes   # or a .md file, several, or nothing for the current folder
+```
+
+It opens `http://127.0.0.1:8765/` in your browser and serves until Ctrl+C.
+
+| Option | Effect |
+|---|---|
+| `--port 8765` | Port to serve on (the default is 8765). |
+| `--next` | If the port is taken, use the next free one nearby. This is the default. |
+| `--replace` | If another md-display has the port, stop it and take over. Anything else on the port is left alone. |
+| `--wipe` | Stop every running md-display, then start. |
+| `--host 0.0.0.0` | Let other machines connect. There's no login, so it prints a warning. |
+| `--no-demo` | Leave the demo docs out of the doc list. |
+| `--no-browser` | Don't open a browser tab on start. |
+
+Only files under the folder served can be read, never hidden ones (such as
+`.env`), and only by pages from this machine. Running servers are noted in
+`~/.md-display/servers/` so `--wipe` can find them; each is asked to confirm
+it's md-display before it's stopped.
+
 ## Development
 
-Needs Node 22.
+Needs Node 22.18 or later.
 
 ```bash
 npm install
@@ -49,6 +81,7 @@ npm test             # Vitest unit tests
 npx playwright install chromium
 npm run test:e2e     # Playwright, against a production build
 npm run build        # into dist/
+npm run serve -- ~/notes   # the local server, on a built dist/
 ```
 
 Pushes to `main` are tested and deployed to GitHub Pages by
@@ -56,7 +89,8 @@ Pushes to `main` are tested and deployed to GitHub Pages by
 works from any URL prefix.
 
 The code is in three parts: pure renderers (text to HTML) in `src/render/`,
-file access behind one interface in `src/source/`, and the page in `src/ui/`. The service
+file access behind one interface in `src/source/`, and the page in `src/ui/`. The local
+server is in `server/`: plain Node, run as TypeScript with no build step. The service
 worker that makes it work offline is generated at build time by
 `build/offline.ts`.
 

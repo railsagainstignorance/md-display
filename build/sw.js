@@ -6,6 +6,8 @@
 const CACHE = "mddisplay-__VERSION__";
 const FILES = __FILES__;
 const PAGE = new URL("./", self.registration.scope).href;
+/** The local server's docs and changes (server/): always fetched fresh. */
+const API = new URL("./api/", self.registration.scope).href;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(["./", ...FILES])));
@@ -23,7 +25,7 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || url.href.startsWith(API)) return;
   // The page itself, whatever doc its query names (?doc=…).
   const isPage = request.mode === "navigate" && (url.href.split(/[?#]/)[0] === PAGE || url.pathname.endsWith("/index.html"));
   const key = isPage ? PAGE : request;

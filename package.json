@@ -5,11 +5,18 @@
   "description": "Browser-only Markdown viewer and Marp slide presenter with live updates.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "md-display": "server/cli.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run typecheck && vite build",
+    "serve": "node --disable-warning=ExperimentalWarning server/cli.ts",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"

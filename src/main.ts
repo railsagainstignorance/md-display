@@ -8,6 +8,7 @@ import { parseFrontMatter } from "./render/frontmatter";
 import { renderMarp } from "./render/marp/render";
 import { isMarp } from "./render/marp/slides";
 import { demoSource } from "./source/demo";
+import { connectToServer, ServerSource } from "./source/server";
 import type { DocSource } from "./source/types";
 import { fillDocSelect } from "./ui/docSelect";
 import { copyForSlack, downloadText } from "./ui/exports";
@@ -40,6 +41,8 @@ let reopenLocal: (() => Promise<DocSource | null>) | null = null;
 /** The doc the page was loaded with (`?doc=`), reopened once a remembered folder is allowed again. */
 const requestedAtStart = new URLSearchParams(location.search).get("doc");
 let lastPick: PickKind = "files";
+/** The demo docs are listed after the user's, unless the local server was started with `--no-demo`. */
+let showDemo = true;
 /** Files the installed app was opened with take the place of whatever was open last time. */
 let launched = false;
 let docs: DocRef[] = [];
@@ -158,7 +161,10 @@ async function useLocalSource(source: DocSource, preferredId?: string | null): P
 }
 
 async function refreshDocs(): Promise<void> {
-  docs = [...(localSource ? await listDocRefs(localSource) : []), ...(await listDocRefs(demoSource))];
+  docs = [
+    ...(localSource ? await listDocRefs(localSource) : []),
+    ...(showDemo || !localSource ? await listDocRefs(demoSource) : []),
+  ];
   fillDocSelect(docSelect, docs, active?.id ?? "");
 }
 
@@ -328,17 +334,26 @@ async function start(): Promise<void> {
     useLocalSource(source).catch((e) => setStatus(`⚠️ Couldn't open that: ${errorMessage(e)}`));
   });
   const fragment = location.hash.slice(1);
-  const last = await remembered();
+  // Served by the local server: its folder, with nothing to pick or allow.
+  const server = await connectToServer();
+  const last = server ? null : await remembered();
   if (launched) return;
-  if (last.state === "ready") {
+  if (server) {
+    localSource = new ServerSource(server);
+    showDemo = server.demo;
+  } else if (last?.state === "ready") {
     localSource = last.source;
-  } else if (last.state === "needs-permission") {
+  } else if (last?.state === "needs-permission") {
     reopenLocal = last.reopen;
     toolbar.setOpenState({ reopenName: last.name, canReload: false });
   }
   await refreshDocs();
   if (launched) return;
   const first = docs.find((d) => d.id === requestedAtStart) ?? docs[0];
+  if (!first) {
+    setStatus(`⚠️ There are no Markdown files in ${localSource?.label ?? "this folder"}.`);
+    return;
+  }
   await openDoc(first, first.id === requestedAtStart ? fragment : "");
 }
 
