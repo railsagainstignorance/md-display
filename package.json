@@ -1,19 +1,26 @@
 {
   "name": "md-display",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Browser-only Markdown viewer and Marp slide presenter with live updates.",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "md-display": "server/cli.ts"
+    "md-display": "dist-server/cli.js"
   },
+  "files": [
+    "dist",
+    "dist-server",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
-    "node": ">=22.18"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && vite build && npm run build:server",
+    "build:server": "node --disable-warning=ExperimentalWarning build/server.ts",
     "serve": "node --disable-warning=ExperimentalWarning server/cli.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json",
@@ -21,14 +28,12 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test"
   },
-  "dependencies": {
-    "dompurify": "^3.4.17",
-    "markdown-it": "^15.0.3",
-    "mermaid": "^12.2.0"
-  },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
+    "dompurify": "^3.4.17",
+    "markdown-it": "^15.0.3",
+    "mermaid": "^12.2.0",
     "typescript": "^7.0.2",
     "vite": "^7.3.7",
     "vitest": "^3.2.7"

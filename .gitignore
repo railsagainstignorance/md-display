@@ -4,6 +4,7 @@ PLAN.md
 
 node_modules/
 dist/
+dist-server/
 test-results/
 playwright-report/
 .DS_Store

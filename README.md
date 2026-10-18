@@ -41,16 +41,31 @@ thumbnails, <kbd>n</kbd> notes, <kbd>c</kbd> timer, <kbd>i</kbd> contents,
 
 md-display can also run from your own machine, serving files by path: no
 picking or permission prompts, live updates in every browser, and links that
-open any doc under the folder. It needs Node 22.18 or later and a copy of
-this repo:
+open any doc under the folder. It needs Node 22 or later, and nothing else:
 
 ```bash
-git clone https://github.com/railsagainstignorance/md-display.git
-cd md-display
-npm install && npm run build
-npm link             # puts the md-display command on your PATH
-md-display ~/notes   # or a .md file, several, or nothing for the current folder
+npx -y https://github.com/railsagainstignorance/md-display/releases/latest/download/md-display.tgz ~/notes
 ```
+
+That fetches the latest release (about 1.6 MB, no dependencies) and serves
+`~/notes`: give it a folder, a `.md` file, several, or nothing for the current
+folder. To make it a command, add an alias to your shell's startup file:
+
+```bash
+alias md-display='npx -y https://github.com/railsagainstignorance/md-display/releases/latest/download/md-display.tgz'
+md-display ~/notes
+```
+
+npx keeps the first copy it fetches from a URL and runs that from then on,
+even once there's a newer release. To update, clear npx's cache and run it
+again:
+
+```bash
+rm -rf "$(npm config get cache)/_npx"
+```
+
+To pin a version instead, use its own URL, such as
+`https://github.com/railsagainstignorance/md-display/releases/download/v0.1.0/md-display.tgz`.
 
 It opens `http://127.0.0.1:8765/` in your browser and serves until Ctrl+C.
 
@@ -80,17 +95,27 @@ npm run typecheck
 npm test             # Vitest unit tests
 npx playwright install chromium
 npm run test:e2e     # Playwright, against a production build
-npm run build        # into dist/
+npm run build        # the page into dist/, the server into dist-server/
 npm run serve -- ~/notes   # the local server, on a built dist/
+npm link             # or put the md-display command on your PATH
 ```
 
 Pushes to `main` are tested and deployed to GitHub Pages by
 `.github/workflows/deploy.yml`. The build uses relative paths, so `dist/`
 works from any URL prefix.
 
+To release, bump `version` in `package.json`, commit, then tag and push the
+tag (`git tag v0.2.0 && git push origin v0.2.0`).
+`.github/workflows/release.yml` tests and builds it, packs `dist/` and
+`dist-server/` (no runtime dependencies: the page's libraries are bundled into
+`dist/`), and attaches `md-display.tgz` to a GitHub release. It fails if the
+tag doesn't match the version. Nothing is published to npm.
+
 The code is in three parts: pure renderers (text to HTML) in `src/render/`,
 file access behind one interface in `src/source/`, and the page in `src/ui/`. The local
-server is in `server/`: plain Node, run as TypeScript with no build step. The service
+server is in `server/`: plain Node, run as TypeScript in development and
+compiled to JS for the release package, since Node won't strip types under
+`node_modules`, where npx installs it. The service
 worker that makes it work offline is generated at build time by
 `build/offline.ts`.
 

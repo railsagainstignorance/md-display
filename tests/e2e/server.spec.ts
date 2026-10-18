@@ -8,6 +8,11 @@ import { join } from "node:path";
 // The page served by the local server (server/cli.ts) on a folder of its
 // own, rather than by the preview server the other specs use.
 
+const SOURCE = ["--disable-warning=ExperimentalWarning", "server/cli.ts"];
+// What the release package runs, compiled by `npm run build` (as the
+// preview server's command does before these specs start).
+const COMPILED = ["dist-server/cli.js"];
+
 const DOT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8"/></svg>';
 
 let dir: string;
@@ -23,11 +28,16 @@ function freePort(): Promise<number> {
 }
 
 /** Starts md-display on `args`, resolving with the address it prints. */
-async function serve(...args: string[]): Promise<string> {
+function serve(...args: string[]): Promise<string> {
+  return serveWith(SOURCE, ...args);
+}
+
+/** Starts `cli` on `args`; anything on stderr, a warning included, fails it. */
+async function serveWith(cli: string[], ...args: string[]): Promise<string> {
   const port = await freePort();
   const child = spawn(
     process.execPath,
-    ["--disable-warning=ExperimentalWarning", "server/cli.ts", "--no-browser", "--port", String(port), ...args],
+    [...cli, "--no-browser", "--port", String(port), ...args],
     { env: { ...process.env, MD_DISPLAY_HOME: join(dir, "home") } },
   );
   servers.push(child);
@@ -71,6 +81,14 @@ test("serves the folder's docs with nothing to pick, images included", async ({ 
   await page.getByText("to b", { exact: true }).click();
   await expect(page.locator("#mdd-rendered h1")).toHaveText("Doc B");
   await expect(page).toHaveURL(/\?doc=local%2Fsub%2Fb\.md$/);
+});
+
+test("the compiled server, as packaged for release, serves the same", async ({ page }) => {
+  await page.goto(await serveWith(COMPILED, join(dir, "notes")));
+  await expect(page.locator("#mdd-rendered h1")).toHaveText("Doc A");
+  await expect(page.locator('#mdd-doc-select optgroup[label="📁 notes"] option')).toHaveText(["a.md", "sub/b.md"]);
+  writeFileSync(join(dir, "notes/a.md"), "# Doc A, edited\n");
+  await expect(page.locator("#mdd-rendered h1")).toHaveText("Doc A, edited", { timeout: 5000 });
 });
 
 test("updates live when a file changes, with no Reload button", async ({ page }) => {

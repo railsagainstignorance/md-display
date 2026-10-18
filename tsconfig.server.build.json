@@ -1,0 +1,11 @@
+{
+  // Compiles the server to plain JS in dist-server/ for the release package:
+  // Node won't strip types from files under node_modules, where npx installs it.
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist-server",
+    "rootDir": "server",
+    "rewriteRelativeImportExtensions": true
+  }
+}
