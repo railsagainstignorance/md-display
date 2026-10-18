@@ -4,6 +4,11 @@ name: Release
 # the package to a GitHub release as md-display.tgz, for
 #   npx -y https://github.com/railsagainstignorance/md-display/releases/latest/download/md-display.tgz
 # Nothing goes to the npm registry.
+#
+# Hardened, as what it builds runs on other people's machines: actions are
+# pinned to commits (update the SHA and its comment together), nothing is
+# cached between runs, and the job that installs and runs the dev tools can't
+# write to the repo; only the small job that publishes can.
 
 on:
   push:
@@ -13,18 +18,16 @@ permissions:
   contents: read
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-          cache: npm
+          package-manager-cache: false
       - name: Check the tag matches package.json
         run: |
           version="$(node -p 'require("./package.json").version')"
@@ -44,10 +47,29 @@ jobs:
         run: |
           npm pack
           cp "md-display-${GITHUB_REF_NAME#v}.tgz" md-display.tgz
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: md-display*.tgz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: 'md-display*.tgz'
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" md-display.tgz "md-display-${GITHUB_REF_NAME#v}.tgz" --generate-notes
+        run: >-
+          gh release create "$GITHUB_REF_NAME" md-display.tgz "md-display-${GITHUB_REF_NAME#v}.tgz"
+          --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
