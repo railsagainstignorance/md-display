@@ -10,6 +10,7 @@ import { isMarp } from "./render/marp/slides";
 import { demoSource } from "./source/demo";
 import { connectToServer, ServerSource } from "./source/server";
 import type { DocSource } from "./source/types";
+import { scopedDocCss } from "./ui/docCss";
 import { fillDocSelect } from "./ui/docSelect";
 import { copyForSlack, downloadText } from "./ui/exports";
 import { loadImages, rewriteLinks, type LinkTargets } from "./ui/links";
@@ -198,12 +199,13 @@ function show(doc: DocRef, keepScroll: boolean): void {
   const plain = deck ? null : renderDocument(text);
   const { html, hasMermaid } = deck ?? plain!;
   if (!deck) slides.detach();
-  deckStyle.textContent = deck ? `${deck.deckCss}\n${deck.userCss}` : "";
+  deckStyle.textContent = deck ? `${deck.deckCss}\n${scopedDocCss(deck.userCss)}` : "";
   document.body.classList.toggle("slides-mode", asSlides);
   toolbar.setMode(asSlides ? "slides" : isDeck ? "deck-document" : "document");
 
   // SANITIZE_NAMED_PROPS prefixes the doc's ids (see ui/fragments.ts).
   const fragment = DOMPurify.sanitize(html, { RETURN_DOM_FRAGMENT: true, SANITIZE_NAMED_PROPS: true });
+  for (const style of fragment.querySelectorAll("style")) style.textContent = scopedDocCss(style.textContent ?? "");
   const targets = linkTargets(doc);
   rewriteLinks(fragment, targets);
   rendered.replaceChildren(fragment);

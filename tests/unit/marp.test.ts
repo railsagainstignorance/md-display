@@ -276,9 +276,9 @@ describe("renderMarp", () => {
     expect(four.deckCss).toContain("aspect-ratio: 960 / 720");
   });
 
-  it("scopes the front matter's style to the rendered doc", () => {
+  it("passes the front matter's style on, for the page to scope", () => {
     const { userCss } = deck("---\nmarp: true\nstyle: |\n  section { color: red; }\n---\n# A\n");
-    expect(userCss).toBe("#mdd-rendered#mdd-rendered {\nsection { color: red; }\n}");
+    expect(userCss).toBe("section { color: red; }");
     expect(rendered.userCss).toBe("");
   });
 

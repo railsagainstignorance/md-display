@@ -124,6 +124,44 @@ test("a doc can't send the reader to a file that would run as md-display", async
   }
 });
 
+test("another site can't load a doc's files, even to see if they're there", async ({ request }) => {
+  const file = new URL("/api/file?path=img/dot.svg", await serve(join(dir, "notes"))).href;
+  for (const site of ["cross-site", "same-site"]) {
+    expect((await request.get(file, { headers: { "sec-fetch-site": site } })).status()).toBe(403);
+  }
+  const own = await request.get(file, { headers: { "sec-fetch-site": "same-origin" } });
+  expect(own.status()).toBe(200);
+  expect(own.headers()["cross-origin-resource-policy"]).toBe("same-origin");
+});
+
+test("a doc's CSS styles only the doc, and can't load anything", async ({ page }) => {
+  const leak = "http://127.0.0.1:9/leak";
+  writeFileSync(
+    join(dir, "notes/a.md"),
+    `# Doc A\n\n<style>h1 { color: rgb(1, 2, 3) }\n#mdd-nav, & ~ #mdd-raw-source { outline: 7px solid red }\n` +
+      `:root:has(option[value*="b.md"]) :scope { background-image: url(${leak}) }\n` +
+      `:scope { --x: \\75 rl(${leak}); background-image: var(--x) }</style>\n`,
+  );
+  writeFileSync(
+    join(dir, "notes/deck.md"),
+    "---\nmarp: true\nstyle: |\n  section { color: rgb(4, 5, 6); }\n  } #mdd-toolbar { outline: 7px solid red } .x {\n---\n# Slide\n",
+  );
+  const requested: string[] = [];
+  page.on("request", (req) => requested.push(req.url()));
+  const base = await serve(join(dir, "notes"));
+  const outline = (selector: string) => page.locator(selector).evaluate((el) => getComputedStyle(el).outlineStyle);
+
+  await page.goto(base);
+  await expect(page.locator("#mdd-rendered h1")).toHaveCSS("color", "rgb(1, 2, 3)");
+  expect(await outline("#mdd-nav")).toBe("none");
+  expect(await outline("#mdd-raw-source")).toBe("none");
+
+  await page.goto(`${base}?doc=local%2Fdeck.md`);
+  await expect(page.locator("#mdd-rendered section").first()).toHaveCSS("color", "rgb(4, 5, 6)");
+  expect(await outline("#mdd-toolbar")).toBe("none");
+  expect(requested.filter((url) => url.startsWith(leak))).toEqual([]);
+});
+
 test("started on one file, opens it; --no-demo leaves the demo out", async ({ page }) => {
   const url = await serve("--no-demo", join(dir, "notes/sub/b.md"));
   expect(url).toMatch(/\?doc=local%2Fb\.md$/);

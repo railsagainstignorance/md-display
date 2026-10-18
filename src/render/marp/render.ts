@@ -19,7 +19,7 @@ export interface RenderedDeck {
   deckCss: string;
   /** The print page for slides alone (one slide per page). */
   pageCss: string;
-  /** The front matter's `style:`, scoped to the rendered doc; empty when there is none. */
+  /** The front matter's `style:`, as written (ui/docCss.ts scopes it); empty when there is none. */
   userCss: string;
   hasMermaid: boolean;
   /** The front matter's `title:`, if any. */
@@ -148,8 +148,7 @@ export function renderMarp(meta: Record<string, string>, body: string, bodyLine 
     nav,
     deckCss: deckCss(width, height, meta),
     pageCss: `@page { size: ${width}px ${height}px; margin: 0; }`,
-    // Doubled id: the deck's own CSS outranks the page's slide styles, as a Marp `style:` overrides its theme.
-    userCss: meta.style ? `#mdd-rendered#mdd-rendered {\n${meta.style}\n}` : "",
+    userCss: meta.style ?? "",
     hasMermaid: slides.some((s) => s.hasMermaid),
     title: meta.title || undefined,
   };
