@@ -4,6 +4,8 @@ View Markdown files and Marp slide decks in your browser, with live updates as
 you edit. Nothing to install and nothing uploaded: the page reads your files
 on your own computer.
 
+**Open it: <https://railsagainstignorance.github.io/md-display/>**
+
 ## What it does
 
 - **Documents** render as GitLab renders them (CommonMark and GFM): a nav of
@@ -27,7 +29,7 @@ slide version, `demo/md-display-demo-slides.md`.
 
 ## Using it
 
-Open the page, then **Open file…**, **Open folder…**, or drop files or a
+Open [the page](https://railsagainstignorance.github.io/md-display/), then **Open file…**, **Open folder…**, or drop files or a
 folder on it. Open the folder (not just the file) when a document has images
 or links to other documents: the browser only lets the page read what you
 picked.
