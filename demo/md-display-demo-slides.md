@@ -14,7 +14,7 @@ style: |
 
 # md-display
 
-*by Chris Gathercole*
+*by Chris Gathercole · [source on GitHub](https://github.com/railsagainstignorance/md-display)*
 
 **Local markdown files and slides rendered in your browser, updated live**
 
@@ -774,6 +774,8 @@ These render differently here from GitLab, in slides and documents alike:
 - Image filters
 - More than one `bg` image per slide
 - A presenter view in a second window (private notes, the next slide)
+
+Missing something, or found a bug? [Open an issue](https://github.com/railsagainstignorance/md-display/issues)
 
 <!--
 Last slide. Try toggling notes on and printing to see the A4 layout.

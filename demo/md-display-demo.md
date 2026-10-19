@@ -1,6 +1,6 @@
 # md-display
 
-*by Chris Gathercole*
+*by Chris Gathercole · [source on GitHub](https://github.com/railsagainstignorance/md-display)*
 
 **Local markdown files and slides rendered in your browser, updated live**
 
@@ -374,3 +374,5 @@ These render differently here from GitLab:
 - On slides: Marp themes, `<style scoped>`, image filters, more than one `bg`
   image per slide, and a presenter view in a second window. See
   [the deck's last slide](md-display-demo-slides.md#not-supported-on-slides).
+
+Missing something else, or found a bug? [Open an issue](https://github.com/railsagainstignorance/md-display/issues).
