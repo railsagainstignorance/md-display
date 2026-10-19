@@ -100,6 +100,16 @@ test("the dropdown switches docs and the URL follows", async ({ page }) => {
   await expect(page).toHaveTitle("md-display slide demo · md-display");
 });
 
+test("shortcuts work straight after picking a doc from the dropdown", async ({ page }) => {
+  const select = page.locator("#mdd-doc-select");
+  await select.focus();
+  await select.selectOption("demo/md-display-demo-slides.md");
+  await expect(page.locator("#mdd-rendered .slide-wrapper").first()).toBeVisible();
+  await page.keyboard.press("f");
+  await expect(page.locator("body")).toHaveClass(/presenting/);
+  await expect(select).toHaveValue("demo/md-display-demo-slides.md");
+});
+
 test("a ?doc= link opens that doc at the heading in its hash", async ({ page }) => {
   await page.goto("/?doc=demo/md-display-demo.md#tables");
   await expect(page.locator("#user-content-tables")).toBeInViewport();

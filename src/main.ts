@@ -272,6 +272,9 @@ async function reread(doc: DocRef): Promise<void> {
 docSelect.addEventListener("change", () => {
   const doc = docs.find((d) => d.id === docSelect.value);
   if (doc) openDoc(doc);
+  // Let go of the keyboard, so shortcuts reach the doc rather than picking
+  // another doc by its first letter.
+  docSelect.blur();
 });
 
 // Links within the doc scroll to their (prefixed) target; a link to another
