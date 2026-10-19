@@ -6,6 +6,9 @@ import { elementForFragment, USER_ID_PREFIX } from "./fragments";
 // clicking a heading with another close below it highlights the one clicked.
 const ACTIVE_OFFSET_PX = 24;
 
+// How many entries the nav keeps in sight above and below the highlighted one.
+const FOLLOW_BUFFER = 3;
+
 /**
  * Lists the doc's headings (or a deck's slides) in the nav and keeps the one
  * being read highlighted, in the rendered view or the raw Markdown, where
@@ -104,8 +107,39 @@ export class Nav {
     if (document.body.classList.contains("presenting")) return;
     const first = this.targets()[0];
     const current = this.position ?? (first && this.idOf(first));
-    for (const a of this.links.querySelectorAll<HTMLAnchorElement>("a[data-id]")) {
-      a.classList.toggle("active", a.dataset.id === current);
+    if (current === this.activeId) return;
+    const entries = [...this.links.querySelectorAll<HTMLAnchorElement>("a[data-id]")];
+    for (const a of entries) a.classList.toggle("active", a.dataset.id === current);
+    const index = entries.findIndex((a) => a.dataset.id === current);
+    if (index >= 0) this.follow(entries, index);
+  }
+
+  /**
+   * Scrolls the nav (not the page) so the highlighted entry has a few entries
+   * in sight either side, or is centred if the nav is too short for them.
+   */
+  private follow(entries: HTMLAnchorElement[], index: number): void {
+    const scroller = scrollerOf(this.links);
+    if (!scroller) return;
+    const view = scroller.getBoundingClientRect();
+    const above = entries[Math.max(0, index - FOLLOW_BUFFER)].getBoundingClientRect();
+    const below = entries[Math.min(entries.length - 1, index + FOLLOW_BUFFER)].getBoundingClientRect();
+    if (below.bottom - above.top > scroller.clientHeight) {
+      const active = entries[index].getBoundingClientRect();
+      scroller.scrollTop += active.top + active.height / 2 - (view.top + scroller.clientHeight / 2);
+    } else if (above.top < view.top) {
+      scroller.scrollTop += above.top - view.top;
+    } else if (below.bottom > view.top + scroller.clientHeight) {
+      scroller.scrollTop += below.bottom - (view.top + scroller.clientHeight);
     }
   }
+}
+
+/** The nearest element at or above `el` that scrolls vertically. */
+function scrollerOf(el: HTMLElement): HTMLElement | undefined {
+  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node);
+    if ((overflowY === "auto" || overflowY === "scroll") && node.scrollHeight > node.clientHeight) return node;
+  }
+  return undefined;
 }

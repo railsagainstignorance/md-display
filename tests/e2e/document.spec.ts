@@ -21,6 +21,31 @@ test("clicking a nav link scrolls to it and highlights it", async ({ page }) => 
   await expect(page.locator('#mdd-nav-links a[data-id="tables"]')).toHaveClass(/active/);
 });
 
+test("the nav follows the heading being read, keeping three entries either side in sight", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 500 });
+  const entries = page.locator("#mdd-nav-links a");
+  const ids = await entries.evaluateAll((as) => as.map((a) => (a as HTMLElement).dataset.id!));
+  const inSight = async (index: number) => {
+    for (let i = Math.max(0, index - 3); i <= Math.min(ids.length - 1, index + 3); i++) {
+      await expect(entries.nth(i)).toBeInViewport();
+    }
+  };
+
+  const middle = Math.floor(ids.length / 2);
+  await page.locator(`#user-content-${ids[middle]}`).evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await expect(entries.nth(middle)).toHaveClass(/active/);
+  await inSight(middle);
+
+  await page.locator("#mdd-content").evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  const active = () => entries.evaluateAll((as) => as.findIndex((a) => a.classList.contains("active")));
+  await expect.poll(active).toBeGreaterThan(middle);
+  const last = await active();
+  await inSight(last);
+
+  await page.locator("#mdd-content").evaluate((el) => el.scrollTo(0, 0));
+  await inSight(0);
+});
+
 test("r toggles the raw Markdown and is remembered across reloads", async ({ page }) => {
   await page.keyboard.press("r");
   await expect(page.locator("#mdd-raw-source")).toBeVisible();
